@@ -44,6 +44,14 @@ func (s *Store) WritePath(key string, path string) error {
 		return err
 	}
 
+	// if we have 0 entries, we want to directly write to the store, no splitting needed
+	if len(store) == 0 {
+		if err := fileHelper.WriteFile(s.Path, fmt.Sprintf("%s:%s", key, path), 0640); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	if _, err := find(key, store); err == nil {
 		return fmt.Errorf("hook with key '%s' already exists", key)
 	}
@@ -85,12 +93,12 @@ func (s *Store) DeletePath(key string) error {
 }
 
 func find(key string, store string) (string, error) {
-	blocks := strings.Split(store, ";")
-	for i := 0; i < len(blocks); i++ {
-		pairs := strings.Split(blocks[i], ":")
-		vKey := reverseInvalidChars(pairs[0])
+	data := strings.Split(store, ";")
+	for i := 0; i < len(data); i++ {
+		hook := strings.Split(data[i], ":")
+		vKey := reverseInvalidChars(hook[0])
 		if vKey == key {
-			return pairs[i], nil
+			return hook[i], nil
 		}
 	}
 	return "", fmt.Errorf("key '%s' not found in store", key)
