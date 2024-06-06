@@ -4,6 +4,7 @@ import (
 	"os"
 
 	path "github.com/mikeunge/go/pkg/path-helper"
+	"github.com/mikeunge/terminal-hook/pkg/dir"
 	hookStore "github.com/mikeunge/terminal-hook/pkg/store"
 
 	"github.com/akamensky/argparse"
@@ -15,7 +16,7 @@ const (
 	AppName        = "terminal-hook"
 	AppDescription = "Make cd great again."
 	AppAuthor      = "@mikeunge"
-	AppVersion     = "0.0.2"
+	AppVersion     = "0.0.3"
 	Github         = "https://github.com/mikeunge/terminal-hook"
 )
 
@@ -31,10 +32,12 @@ func printAbout() {
 }
 
 func main() {
+	// TODO: write my own argparser because this sucks, I want more args and such
 	parser := argparse.NewParser(AppName, AppDescription)
 	argAbout := parser.Flag("", "about", &argparse.Options{Required: false, Help: "Print information about the app."})
 	argHook := parser.String("", "hook", &argparse.Options{Required: false, Help: "Creates a new hook right where you are."})
 	argDelete := parser.String("", "delete", &argparse.Options{Required: false, Help: "Delete a hook by its key."})
+	argPath := parser.StringPositional(&argparse.Options{Required: false, Help: "Simply add the path!!!"})
 
 	if err := parser.Parse(os.Args); err != nil {
 		pterm.Printf("Parsing error\n%+v", parser.Usage(err))
@@ -75,6 +78,16 @@ func main() {
 		pterm.Info.Println("Deleted hook")
 		os.Exit(0)
 	}
+
+	if len(*argPath) > 0 {
+		p := dir.New(*argPath)
+		if err := p.ChangeDir(); err != nil {
+			pterm.Info.Println("Could not cange path")
+		}
+		os.Exit(0)
+	}
+
+	pterm.Info.Println("No command provided")
 
 	os.Exit(0)
 }
